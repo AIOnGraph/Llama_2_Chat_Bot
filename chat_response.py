@@ -1,15 +1,8 @@
 import streamlit as st
 from langchain.llms.replicate import Replicate
-from langchain.memory import ConversationBufferWindowMemory
+from langchain.memory import ConversationBufferMemory
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
-
-memory = ConversationBufferWindowMemory(
-        memory_key="chat_history",
-        k=10,
-        return_messages=True,
-        input_key='question'
-    )
 
 replicate_api_token = st.secrets["REPLICATE_API_TOKEN"]
 
@@ -25,6 +18,12 @@ prompt = ChatPromptTemplate(
             MessagesPlaceholder(variable_name="chat_history"),
             HumanMessagePromptTemplate.from_template("{question},")
         ])
+memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        k=10,
+        return_messages=True,
+        input_key='question'
+    )
 
 def run_chatbot(user_question,slider_values):
     print("Slider Values:", slider_values) 
