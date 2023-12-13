@@ -20,7 +20,7 @@ prompt = ChatPromptTemplate(
         ])
 memory = ConversationBufferMemory(
         memory_key="chat_history",
-        k=10,
+        k=2,
         return_messages=True,
         input_key='question'
     )
