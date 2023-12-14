@@ -21,7 +21,7 @@ prompt = ChatPromptTemplate(
 memory = ConversationBufferMemory(
         memory_key="chat_history",
         k=2,
-        return_messages=True,
+        return_messages=False,
         input_key='question'
     )
 
