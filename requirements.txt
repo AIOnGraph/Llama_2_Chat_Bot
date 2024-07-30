@@ -36,6 +36,7 @@ MarkupSafe==2.1.5
 mdurl==0.1.2
 multidict==6.0.5
 numpy==1.26.4
+openai==1.37.1
 orjson==3.10.6
 packaging==24.1
 pandas==2.2.2
@@ -62,6 +63,7 @@ tenacity==8.5.0
 toml==0.10.2
 toolz==0.12.1
 tornado==6.4.1
+tqdm==4.66.4
 typing_extensions==4.12.2
 tzdata==2024.1
 urllib3==2.2.2
