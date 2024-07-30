@@ -1,7 +1,24 @@
 import streamlit as st
 from chat_response import run_chatbot
+from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
 
 st.title('🦙💬 Llama 2 Chatbot')
+
+if "prompt" not in st.session_state:
+    st.session_state.prompt = ChatPromptTemplate(
+        messages=[
+                SystemMessagePromptTemplate.from_template(
+                    """Answer all the questions the user asked to you.
+                    Always use the user's memory while giving the answer, as the user's chat history is saved. If the user asks about a previous question, give them the correct answer based on the memory.
+                    Question: {question}
+                    Memory: {memory}
+                    Helpful Answer:"""
+                ),
+                HumanMessagePromptTemplate.from_template("{question},")
+            ],input_variables=["question","memory"])
+
+if "Memory" not in st.session_state:
+    st.session_state.Memory = []
 
 if 'messages' not in st.session_state:
     st.session_state['messages'] = [{"role": "assistant", "content": "Hi human!,How can I help you today?"}]
@@ -21,4 +38,6 @@ if query := st.chat_input("Ask me anything"):
     
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        st.session_state.messages.append({"role": "assistant", "content": st.write_stream(run_chatbot(query))})
+        response = st.write_stream(run_chatbot(query,st.session_state.prompt,st.session_state.Memory))
+        st.session_state.messages.append({"role": "assistant", "content": response })
+        st.session_state.Memory.append({"inputs": query,"output": response})
