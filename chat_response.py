@@ -1,12 +1,11 @@
-import streamlit as st
-from langchain.llms.replicate import Replicate
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import LLMChain
+from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
-
-replicate_api_token = st.secrets["REPLICATE_API_TOKEN"]
-
-llm_model = "meta/llama-2-7b-chat:13c3cdee13ee059ab779f0291d29054dab00a47dad8261375654de5540165fb0"
+from langchain_groq.chat_models import ChatGroq
+from operator import itemgetter
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+import time
+import streamlit as st
+from openai import AuthenticationError
 
 prompt = ChatPromptTemplate(
     messages=[
@@ -15,26 +14,38 @@ prompt = ChatPromptTemplate(
                 Question: {question}
                 Helpful Answer:"""
             ),
-            MessagesPlaceholder(variable_name="chat_history"),
+            MessagesPlaceholder(variable_name="history"),
             HumanMessagePromptTemplate.from_template("{question},")
-        ])
-memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        k=2,
-        return_messages=True,
-        input_key='question'
+        ],input_variables=["question"])
+
+
+llm =  ChatGroq(
+        api_key=st.secrets['GROQ_API_KEY'],
+        model="llama3-70b-8192",
+        temperature=0,
+        max_retries=2,
+        streaming=True
     )
+memory = ConversationBufferWindowMemory(
+        llm=llm, memory_key="history", return_messages=True,k=10)
 
-def run_chatbot(user_question,slider_values):
-    print("Slider Values:", slider_values) 
-
-    llm = Replicate(
-    model=llm_model,
-    streaming=False,
-    replicate_api_token=replicate_api_token,
-    model_kwargs=slider_values
-)
-    chains = LLMChain(memory=memory, prompt=prompt, llm=llm, verbose=True)
-    
-    result = chains({"question": user_question})
-    return result
+def run_chatbot(user_question):
+    try:
+        chain = (
+            RunnablePassthrough.assign(
+                history=RunnableLambda(
+                    memory.load_memory_variables) | itemgetter("history"),
+            )
+            | prompt
+            | llm
+        )
+        output = ""
+        for chunk in chain.stream({"question":user_question}):
+            output += chunk.content
+            yield chunk.content
+            time.sleep(0.05)
+        memory.save_context({"inputs": user_question}, {"output": output})
+    except AuthenticationError:
+        st.warning(
+            body='AuthenticationError : Please provide correct api key 🔑' ,icon='🤖')
+        return 'AuthenticationError'
