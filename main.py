@@ -2,7 +2,7 @@ import streamlit as st
 from chat_response import run_chatbot
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
 
-st.title('🦙💬 Llama 3 Chatbot')
+st.title('🦙💬 Llama 2 Chatbot')
 
 if "prompt" not in st.session_state:
     st.session_state.prompt = ChatPromptTemplate(
